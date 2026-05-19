@@ -141,6 +141,17 @@ MODEL_OPTIONS: ProviderModeOptions = {
             ("Custom model ID", "custom"),
         ],
     },
+    "perplexity": {
+        "quick": [
+            ("Sonar - Fast web-search model, good for quick news summaries", "sonar"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("Sonar Pro - Full research model, recommended for News Analyst", "sonar-pro"),
+            ("Sonar - Fast web-search model", "sonar"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     # Qwen: same model IDs across global (dashscope-intl) and China
     # (dashscope) endpoints, so the two provider keys share one model list.
     "qwen": _QWEN_MODELS,
