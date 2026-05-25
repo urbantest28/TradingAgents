@@ -150,6 +150,7 @@ _PASSTHROUGH_KWARGS = (
 _PROVIDER_BASE_URL = {
     "xai":        "https://api.x.ai/v1",
     "deepseek":   "https://api.deepseek.com",
+    "perplexity": "https://api.perplexity.ai",
     "qwen":       "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     "qwen-cn":    "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "glm":        "https://api.z.ai/api/paas/v4/",
