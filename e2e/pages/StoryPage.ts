@@ -4,8 +4,10 @@ export class StoryPage {
   constructor(private page: Page) {}
 
   async getTicker(): Promise<string> {
-    // The ticker in the top nav bar is a monospace div containing only uppercase letters.
-    // React renders fontFamily: "Geist Mono, monospace" as an inline style attribute.
+    // Wait for StoryView to render — the back button is unique to StoryView (not visible on Hub).
+    // Without this wait, a Hub ticker (e.g. RKLB) is found before navigation completes.
+    await this.page.getByRole('button', { name: '← Hub' }).waitFor();
+    // The ticker in the top nav bar is a Geist Mono div with only 2–5 uppercase letters.
     const tickerEl = this.page.locator('[style*="Geist Mono"]').filter({
       hasText: /^[A-Z]{2,5}$/,
     }).first();

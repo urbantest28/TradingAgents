@@ -31,29 +31,21 @@ export class HubPage {
   }
 
   async getStatValue(label: string): Promise<string> {
-    // Stat component: label div then value div, both inside a parent div
-    const statParent = this.page.locator('div').filter({
-      has: this.page.getByText(label, { exact: true }),
-    }).first();
-    const valueEl = statParent.locator('div').nth(1);
+    // Stat component: label div and value div are adjacent siblings inside the same parent.
+    // getByText(exact) returns the small label div; following-sibling gets the value div.
+    const labelEl = this.page.getByText(label, { exact: true });
+    const valueEl = labelEl.locator('xpath=following-sibling::div[1]');
     return (await valueEl.textContent())?.trim() ?? '';
   }
 
   async openReport(ticker: string): Promise<void> {
-    // Each ticker group card contains the ticker text and one or more "Open →" run rows.
-    // Iterate all candidate divs that have "Open →" and find the one containing the ticker.
-    const candidates = this.page.locator('div').filter({
-      has: this.page.getByText('Open →'),
-    });
-    const count = await candidates.count();
-    for (let i = 0; i < count; i++) {
-      const el = candidates.nth(i);
-      const text = await el.textContent();
-      if (text?.includes(ticker)) {
-        await el.getByText('Open →').first().click();
-        return;
-      }
-    }
-    throw new Error(`Report card for ticker "${ticker}" not found`);
+    // Hub structure: Card div > header row div > left-side div > ticker heading div (Geist Mono, fontSize 22)
+    // Navigate 3 ancestor levels up from the ticker heading to reach the Card div,
+    // then click the first "Open →" within that card.
+    const tickerHeading = this.page.locator('[style*="Geist Mono"]').filter({
+      hasText: new RegExp(`^${ticker}$`),
+    }).first();
+    const cardEl = tickerHeading.locator('xpath=ancestor::div[3]');
+    await cardEl.getByText('Open →').first().click();
   }
 }

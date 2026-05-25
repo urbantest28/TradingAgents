@@ -32,12 +32,12 @@ test.describe('Hub page', () => {
     expect(count).toBe(1);
   });
 
-  test('Verdict filter BUY shows only BUY reports', async ({ page }) => {
+  test('Verdict filter HOLD shows only HOLD reports', async ({ page }) => {
     const hub = new HubPage(page);
     await hub.goto();
-    await hub.filterByVerdict('BUY');
+    await hub.filterByVerdict('HOLD');
     const count = await hub.getReportCount();
-    // At least one BUY report exists and at least one non-BUY was filtered out
+    // At least one HOLD report exists and at least one non-HOLD was filtered out
     expect(count).toBeGreaterThan(0);
     expect(count).toBeLessThan(6);
   });
@@ -45,7 +45,7 @@ test.describe('Hub page', () => {
   test('Clearing filter (ALL) restores all rows', async ({ page }) => {
     const hub = new HubPage(page);
     await hub.goto();
-    await hub.filterByVerdict('BUY');
+    await hub.filterByVerdict('HOLD');
     await hub.filterByVerdict('ALL');
     const count = await hub.getReportCount();
     expect(count).toBe(6);
