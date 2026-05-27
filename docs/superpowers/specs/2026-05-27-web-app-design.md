@@ -84,6 +84,7 @@ A single-page app served at the root URL. No Node.js, no npm, no compilation. JS
 
 ### Background run management
 
+- Only one run may be active at a time (v1, personal use). Attempting to launch a second run while one is running returns a `409 Conflict` response and the browser shows an error prompting the user to wait.
 - Each run is assigned a UUID (`run_id`) at launch time
 - FastAPI uses a `ThreadPoolExecutor` to run `TradingAgentsGraph.graph.stream()` in a background thread (the graph code is synchronous and cannot be made async without changes)
 - Each run has an in-memory `asyncio.Queue` for events
@@ -218,10 +219,10 @@ Persistent across all pages. Three items: **New Run** · **Monitor** · **Report
 
 ### Reports section (migrated from Trading Reports.html)
 
-`Hub.jsx` and `StoryView.jsx` are kept unchanged. The only modification is in `data.jsx`:
-- `REPORT_MANIFEST` constant and `generate_manifest.py` dependency removed
-- `loadManifest()` async function added that calls `GET /api/reports`
-- `Hub.jsx` calls `loadManifest()` on mount instead of using the static constant
+`Hub.jsx` and `StoryView.jsx` are kept unchanged. The modifications are in `data.jsx` and `App.jsx`:
+- `REPORT_MANIFEST` constant and `generate_manifest.py` dependency removed from `data.jsx`
+- `loadManifest()` async function added to `data.jsx` that calls `GET /api/reports`
+- `App.jsx` calls `loadManifest()` on mount instead of mapping over the static `REPORT_MANIFEST` constant
 
 The tweaks panel, markdown rendering, verdict display, confidence gauge, and all visual behaviour are preserved exactly.
 
