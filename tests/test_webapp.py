@@ -140,7 +140,7 @@ def test_get_api_key_ollama_no_key_required(tmp_path, monkeypatch):
 
 
 def test_get_api_key_unknown_provider(tmp_path, monkeypatch):
-    """GET /api/env/api-key/<unknown> returns present:true (treat as no key needed)."""
+    """GET /api/env/api-key/<unknown> returns present:true (no key check possible for unknown providers)."""
     (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     import sys
