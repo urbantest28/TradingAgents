@@ -1285,25 +1285,17 @@ def run_analysis(checkpoint: bool = False):
             meta["ticker"] = selections["ticker"]
             meta["analysis_date"] = selections["analysis_date"]
             (save_path / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-            _viewer = Path(__file__).resolve().parent.parent / "Trading Reports.html"
-            if _viewer.exists():
-                _manifest = Path(__file__).resolve().parent.parent / "scripts" / "generate_manifest.py"
-                if _manifest.exists():
-                    subprocess.run(
-                        [sys.executable, str(_manifest)],
-                        check=False,
-                        capture_output=True,
-                    )
-                _serve = Path(__file__).resolve().parent.parent / "serve.py"
-                if not _port_open(7788) and _serve.exists():
+            _webapp = Path(__file__).resolve().parent.parent / "webapp.py"
+            if _webapp.exists():
+                if not _port_open(7788):
                     subprocess.Popen(
-                        [sys.executable, str(_serve)],
+                        [sys.executable, str(_webapp)],
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                     )
-                    time.sleep(1.0)
+                    time.sleep(1.5)
                 if _port_open(7788):
-                    _url = f"http://localhost:7788/Trading%20Reports.html#/r/{save_path.name}"
+                    _url = f"http://localhost:7788/#/reports/{save_path.name}"
                     if webbrowser.open(_url):
                         console.print(f"\n[bold cyan]Report viewer opened in browser[/bold cyan]")
                         console.print(f"  [dim]URL:[/dim] {_url}")
