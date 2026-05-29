@@ -25,7 +25,13 @@ set MAX_ATTEMPTS=60
 :poll
 timeout /t 1 /nobreak >nul
 
-REM Check whether the server process is still alive
+REM Primary check: is the port now listening? If so, server is ready.
+powershell -nologo -noprofile -command "if (Get-NetTCPConnection -LocalPort %PORT% -State Listen -ErrorAction SilentlyContinue) { exit 0 } else { exit 1 }" >nul 2>nul
+if not errorlevel 1 goto ready
+
+REM Port not yet listening -- check whether any webapp process is still alive.
+REM This catches crashes early (e.g. import error, port conflict) so we fail fast
+REM rather than waiting the full 60 seconds.
 powershell -nologo -noprofile -command "if (Get-CimInstance Win32_Process -Filter ""Name='python.exe' and CommandLine like '%%webapp.py%%'"") { exit 0 } else { exit 1 }" >nul 2>nul
 if errorlevel 1 (
     echo.
@@ -34,10 +40,6 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-
-REM Try to reach the server
-curl -s --max-time 1 -o nul http://localhost:%PORT%/ 2>nul
-if not errorlevel 1 goto ready
 
 set /a ATTEMPTS+=1
 if %ATTEMPTS% geq %MAX_ATTEMPTS% (
