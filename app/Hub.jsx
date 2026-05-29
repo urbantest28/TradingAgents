@@ -1,12 +1,12 @@
 // HUB — landing page listing all report runs. Group by ticker so multi-run timeline shows up.
 // Includes search, filter by verdict, and clickable rows that "navigate" to the detail view.
 
-function HubArtboard({ index = {}, onOpen }) {
+function HubArtboard({ index = {}, onOpen, manifest = [] }) {
   // index: { folder -> { ticker, ts, verdict, target, current, stop, company } }
   const [q, setQ] = React.useState("");
   const [verdictFilter, setVerdictFilter] = React.useState("ALL");
 
-  const rows = REPORT_MANIFEST.map(r => ({ ...r, ...(index[r.folder] || {}) }));
+  const rows = manifest.map(r => ({ ...r, ...(index[r.folder] || {}) }));
 
   // Group by ticker
   const byTicker = {};
