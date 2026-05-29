@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradingAgents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Geist", system-ui, sans-serif; background: #f9f9f8; color: #1a1a1a; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Load shared data/utilities first -->
+  <script type="text/babel" src="/static/data.jsx"></script>
+  <script type="text/babel" src="/static/ui.jsx"></script>
+  <script type="text/babel" src="/static/tweaks-panel.jsx"></script>
+
+  <!-- Page components -->
+  <script type="text/babel" src="/static/Hub.jsx"></script>
+  <script type="text/babel" src="/static/StoryView.jsx"></script>
+  <script type="text/babel" src="/static/NewRun.jsx"></script>
+  <script type="text/babel" src="/static/Monitor.jsx"></script>
+
+  <!-- App shell / router (must be last) -->
+  <script type="text/babel" src="/static/App.jsx"></script>
+</body>
+</html>
