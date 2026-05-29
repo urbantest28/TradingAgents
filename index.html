@@ -21,6 +21,18 @@
 <body>
   <div id="root"></div>
 
+  <script>
+    // Tweakable defaults — wrapped in EDITMODE markers so the host can persist changes to disk.
+    window.TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "accent": "#4F5AE6",
+      "density": "compact",
+      "heroSize": "large",
+      "showConfidence": true,
+      "showBullBear": true,
+      "highlightMetrics": true
+    }/*EDITMODE-END*/;
+  </script>
+
   <!-- Load shared data/utilities first -->
   <script type="text/babel" src="/static/data.jsx"></script>
   <script type="text/babel" src="/static/ui.jsx"></script>
