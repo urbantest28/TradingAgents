@@ -173,7 +173,7 @@ async def launch_run(request: Request):
         raise HTTPException(status_code=409, detail="A run is already in progress")
     body = await request.json()
     run_id = uuid.uuid4().hex
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     run_state: dict[str, Any] = {
         "run_id": run_id,
         "status": "running",
