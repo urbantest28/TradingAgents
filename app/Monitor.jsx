@@ -56,7 +56,7 @@ function AgentTable({ agentStatus }) {
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <StatusDot status={agentStatus[a]} />
                       <span style={{ color: STATUS_COLOR[agentStatus[a]] || COLORS.muted, textTransform: "capitalize" }}>
-                        {agentStatus[a] || "—"}
+                        {(agentStatus[a] || "—").replace(/_/g, " ")}
                       </span>
                     </div>
                   </td>
@@ -83,7 +83,7 @@ function MessageFeed({ messages }) {
         <div key={i} style={{ fontSize: 12, display: "flex", gap: 8, alignItems: "flex-start", lineHeight: 1.5 }}>
           <span style={{ color: COLORS.muted, flexShrink: 0, fontFamily: "Geist Mono, monospace" }}>{m.timestamp}</span>
           <span style={{ color: TYPE_COLOR[m.msg_type] || COLORS.muted, flexShrink: 0, fontSize: 11, fontWeight: 600, textTransform: "uppercase", paddingTop: 1 }}>{m.msg_type}</span>
-          <span style={{ color: COLORS.ink2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.content}</span>
+          <span style={{ color: COLORS.ink2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{m.content}</span>
         </div>
       ))}
       <div ref={endRef} />

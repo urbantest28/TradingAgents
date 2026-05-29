@@ -307,7 +307,21 @@ def _run_analysis_thread(run_id: str, selections: dict, loop: asyncio.AbstractEv
         config["anthropic_effort"] = selections.get("anthropic_effort")
         config["output_language"] = selections.get("output_language", "English")
 
-        ticker = selections["ticker"].upper()
+        ticker = selections["ticker"].upper().strip()
+        # Normalize bare crypto base symbols to yfinance pair format (BTC → BTC-USD).
+        _CRYPTO_BASES = {
+            "BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "AVAX", "DOT",
+            "MATIC", "LINK", "DOGE", "LTC", "UNI", "SHIB", "ATOM", "NEAR",
+        }
+        _CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC", "-BTC", "-ETH")
+        if ticker in _CRYPTO_BASES:
+            ticker = f"{ticker}-USD"
+        # Auto-detect asset type so crypto tickers get the right analyst set.
+        if any(ticker.endswith(s) for s in _CRYPTO_SUFFIXES):
+            asset_type = "crypto"
+        else:
+            asset_type = selections.get("asset_type", "stock")
+
         analysis_date = selections["analysis_date"]
         raw_analysts = selections.get("analysts", ["market", "news", "fundamentals"])
         selected_analyst_keys = [a for a in ANALYST_ORDER if a in raw_analysts]
@@ -341,7 +355,7 @@ def _run_analysis_thread(run_id: str, selections: dict, loop: asyncio.AbstractEv
 
         init_state = graph.propagator.create_initial_state(
             ticker, analysis_date,
-            asset_type=selections.get("asset_type", "stock"),
+            asset_type=asset_type,
         )
         args = graph.propagator.get_graph_args(callbacks=[stats_handler])
 
