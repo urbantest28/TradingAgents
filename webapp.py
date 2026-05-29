@@ -180,6 +180,24 @@ async def check_api_key(provider: str):
     return JSONResponse({"env_var": env_var, "present": present})
 
 
+@app.post("/api/env/api-key")
+async def save_api_key(request: Request):
+    """Write a provider API key to .env and export it into the running process."""
+    body = await request.json()
+    provider = body.get("provider", "")
+    key = body.get("key", "")
+    env_var = get_api_key_env(provider)
+    if env_var is None:
+        raise HTTPException(status_code=400, detail="No API key required for this provider")
+    if not key:
+        raise HTTPException(status_code=400, detail="Key cannot be empty")
+    env_path = find_dotenv(usecwd=True) or str(Path.cwd() / ".env")
+    Path(env_path).touch(exist_ok=True)
+    set_key(env_path, env_var, key)
+    os.environ[env_var] = key
+    return JSONResponse({"ok": True, "env_var": env_var})
+
+
 # ---------------------------------------------------------------------------
 # Routes: /api/runs
 # ---------------------------------------------------------------------------
