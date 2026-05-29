@@ -87,3 +87,69 @@ def test_launch_run_conflict(tmp_path, monkeypatch):
     assert r.status_code == 409
     # Cleanup
     del webapp._runs["fake-run-id"]
+
+
+def test_get_api_key_present(tmp_path, monkeypatch):
+    """GET /api/env/api-key/anthropic returns present:true when key is set."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.get("/api/env/api-key/anthropic")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["env_var"] == "ANTHROPIC_API_KEY"
+    assert data["present"] is True
+
+
+def test_get_api_key_absent(tmp_path, monkeypatch):
+    """GET /api/env/api-key/anthropic returns present:false when key is missing."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.get("/api/env/api-key/anthropic")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["env_var"] == "ANTHROPIC_API_KEY"
+    assert data["present"] is False
+
+
+def test_get_api_key_ollama_no_key_required(tmp_path, monkeypatch):
+    """GET /api/env/api-key/ollama returns present:true with env_var:null."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.get("/api/env/api-key/ollama")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["env_var"] is None
+    assert data["present"] is True
+
+
+def test_get_api_key_unknown_provider(tmp_path, monkeypatch):
+    """GET /api/env/api-key/<unknown> returns present:true (treat as no key needed)."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.get("/api/env/api-key/not-a-real-provider")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["env_var"] is None
+    assert data["present"] is True
