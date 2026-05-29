@@ -40,7 +40,7 @@ curl -s --max-time 1 -o nul http://localhost:%PORT%/ 2>nul
 if not errorlevel 1 goto ready
 
 set /a ATTEMPTS+=1
-if %ATTEMPTS% gtr %MAX_ATTEMPTS% (
+if %ATTEMPTS% geq %MAX_ATTEMPTS% (
     echo.
     echo ERROR: Server did not respond after %MAX_ATTEMPTS% seconds.
     echo Check the "TradingAgents Web App" console window for errors.
