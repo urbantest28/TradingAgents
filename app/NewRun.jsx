@@ -4,24 +4,34 @@
 const { useState, useEffect } = React;
 
 // ── Provider / model catalogue ────────────────────────────────────────────────
-const PROVIDERS = ["anthropic", "openai", "google", "groq", "ollama", "perplexity"];
+const PROVIDERS = ["anthropic", "openai", "google", "xai", "deepseek", "qwen", "glm", "minimax", "groq", "ollama", "perplexity"];
 
 const SHALLOW_MODELS = {
-  anthropic:   ["claude-haiku-4-5", "claude-haiku-3-5"],
-  openai:      ["gpt-4o-mini", "gpt-4.1-mini", "o4-mini"],
-  google:      ["gemini-2.0-flash", "gemini-2.5-flash-preview-05-20"],
+  anthropic:   ["claude-haiku-4-5", "claude-sonnet-4-5", "claude-sonnet-4-6", "claude-opus-4-5", "claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8"],
+  openai:      ["gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.5", "gpt-4.1"],
+  google:      ["gemini-3-flash-preview", "gemini-2.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"],
+  xai:         ["grok-4.20-non-reasoning", "grok-4-fast-non-reasoning", "grok-4-fast-reasoning"],
+  deepseek:    ["deepseek-v4-flash", "deepseek-chat"],
+  qwen:        ["qwen3.6-flash", "qwen3.5-flash"],
+  glm:         ["glm-5-turbo", "glm-4.7", "glm-4.5-air"],
+  minimax:     ["MiniMax-M2.7-highspeed", "MiniMax-M2.5-highspeed", "MiniMax-M2.1-highspeed"],
   groq:        ["llama-3.3-70b-versatile", "llama3-8b-8192"],
-  ollama:      ["llama3.2", "mistral", "phi3"],
+  ollama:      ["qwen3:latest", "gpt-oss:latest", "glm-4.7-flash:latest"],
   perplexity:  ["sonar", "sonar-pro"],
 };
 
 const DEEP_MODELS = {
-  anthropic:   ["claude-sonnet-4-5", "claude-sonnet-4-6", "claude-opus-4-5"],
-  openai:      ["gpt-4o", "gpt-4.1", "o3", "o4-mini"],
-  google:      ["gemini-2.5-pro-preview-05-06", "gemini-2.5-flash-preview-05-20"],
+  anthropic:   ["claude-sonnet-4-5", "claude-sonnet-4-6", "claude-sonnet-4-7", "claude-opus-4-5", "claude-opus-4-6", "claude-opus-4-7", "claude-opus-4-8"],
+  openai:      ["gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.5-pro"],
+  google:      ["gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-pro", "gemini-2.5-flash"],
+  xai:         ["grok-4.20-reasoning", "grok-4-0709", "grok-4-fast-reasoning", "grok-4.20"],
+  deepseek:    ["deepseek-v4-pro", "deepseek-reasoner", "deepseek-chat"],
+  qwen:        ["qwen3.6-plus", "qwen3.5-plus", "qwen3-max"],
+  glm:         ["glm-5.1", "glm-5", "glm-4.7"],
+  minimax:     ["MiniMax-M2.7", "MiniMax-M2.7-highspeed", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"],
   groq:        ["llama-3.3-70b-versatile", "deepseek-r1-distill-llama-70b"],
-  ollama:      ["llama3.1:70b", "mixtral", "qwen2.5:72b"],
-  perplexity:  ["sonar-pro", "sonar-reasoning-pro"],
+  ollama:      ["glm-4.7-flash:latest", "gpt-oss:latest", "qwen3:latest"],
+  perplexity:  ["sonar-pro", "sonar"],
 };
 
 const ANALYSTS = ["market", "social", "news", "fundamentals"];
@@ -81,17 +91,28 @@ function Select({ value, onChange, children, disabled }) {
 function SegmentControl({ value, options, onChange }) {
   return (
     <div style={{ display: "flex", border: `1px solid ${COLORS.rule}`, borderRadius: 8, overflow: "hidden" }}>
-      {options.map(opt => (
-        <button key={opt} onClick={() => onChange(opt)}
-          style={{
-            flex: 1, padding: "8px 0", fontSize: 13, fontWeight: value === opt ? 600 : 400,
-            border: "none", cursor: "pointer", fontFamily: "Geist, sans-serif",
-            background: value === opt ? COLORS.ink : "white",
-            color: value === opt ? "white" : COLORS.ink2,
-            transition: "background 120ms",
-          }}
-        >{opt}</button>
-      ))}
+      {options.map(opt => {
+        const optValue = typeof opt === "object" ? opt.value : opt;
+        const optLabel = typeof opt === "object" ? opt.label : String(opt);
+        const optSub   = typeof opt === "object" ? opt.sub   : null;
+        const active   = value === optValue;
+        return (
+          <button key={optValue} onClick={() => onChange(optValue)}
+            style={{
+              flex: 1, padding: optSub ? "6px 0 5px" : "8px 0",
+              fontSize: 13, fontWeight: active ? 600 : 400,
+              border: "none", cursor: "pointer", fontFamily: "Geist, sans-serif",
+              background: active ? COLORS.ink : "white",
+              color: active ? "white" : COLORS.ink2,
+              transition: "background 120ms",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 1,
+            }}
+          >
+            <span>{optLabel}</span>
+            {optSub && <span style={{ fontSize: 10, opacity: 0.75, fontWeight: 400 }}>{optSub}</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -115,10 +136,24 @@ function NewRunPage({ onRunLaunched }) {
   });
   const [error, setError] = useState(null);
   const [launching, setLaunching] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState(null);
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeySaving, setApiKeySaving] = useState(false);
+  const [apiKeyBannerError, setApiKeyBannerError] = useState(null);
 
   useEffect(() => {
     fetchPresets().then(setPresets);
   }, []);
+
+  useEffect(() => {
+    setApiKeyStatus(null);
+    setApiKeyInput("");
+    setApiKeyBannerError(null);
+    fetch(`/api/env/api-key/${form.llm_provider}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setApiKeyStatus(data); })
+      .catch(() => {});
+  }, [form.llm_provider]);
 
   function set(key, value) {
     setForm(f => ({ ...f, [key]: value }));
@@ -144,6 +179,28 @@ function NewRunPage({ onRunLaunched }) {
     const saved = await savePreset({ ...form, name });
     setPresets(ps => [...ps, saved]);
     setSelectedPresetId(saved.id);
+  }
+
+  async function handleSaveApiKey() {
+    setApiKeySaving(true);
+    setApiKeyBannerError(null);
+    try {
+      const r = await fetch("/api/env/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider: form.llm_provider, key: apiKeyInput }),
+      });
+      if (!r.ok) {
+        const { detail } = await r.json();
+        throw new Error(detail || "Failed to save key");
+      }
+      setApiKeyStatus({ present: true });
+      setApiKeyInput("");
+    } catch (e) {
+      setApiKeyBannerError(String(e));
+    } finally {
+      setApiKeySaving(false);
+    }
   }
 
   async function handleLaunch() {
@@ -249,7 +306,11 @@ function NewRunPage({ onRunLaunched }) {
         <Field label="Research depth">
           <SegmentControl
             value={form.research_depth}
-            options={[1, 2, 3]}
+            options={[
+              { value: 1, label: "1 — Quick",    sub: "fast, fewer debate rounds" },
+              { value: 2, label: "2 — Standard",  sub: "balanced depth & speed" },
+              { value: 3, label: "3 — Deep",      sub: "thorough, most rounds" },
+            ]}
             onChange={v => set("research_depth", v)}
           />
         </Field>
@@ -264,6 +325,58 @@ function NewRunPage({ onRunLaunched }) {
             {PROVIDERS.map(p => <option key={p} value={p}>{p}</option>)}
           </Select>
         </Field>
+
+        {/* API key banner */}
+        {apiKeyStatus?.present === false && (
+          <div style={{
+            background: "#fffbeb",
+            border: "1px solid #fbbf24",
+            borderRadius: 8,
+            padding: "10px 14px",
+          }}>
+            <div style={{ fontSize: 13, color: "#92400e", marginBottom: 8 }}>
+              No <code>{apiKeyStatus.env_var}</code> found. Enter your API key to save to .env:
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="password"
+                value={apiKeyInput}
+                onChange={e => { setApiKeyInput(e.target.value); setApiKeyBannerError(null); }}
+                placeholder="Paste API key…"
+                style={{
+                  flex: 1,
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  border: `1px solid ${COLORS.rule}`,
+                  borderRadius: 8,
+                  fontFamily: "Geist, sans-serif",
+                  color: COLORS.ink,
+                }}
+              />
+              <button
+                onClick={handleSaveApiKey}
+                disabled={!apiKeyInput.trim() || apiKeySaving}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: apiKeyInput.trim() && !apiKeySaving ? COLORS.ink : COLORS.muted,
+                  color: "white",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: apiKeyInput.trim() && !apiKeySaving ? "pointer" : "default",
+                  fontFamily: "Geist, sans-serif",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {apiKeySaving ? "Saving…" : "Save key"}
+              </button>
+            </div>
+            {apiKeyBannerError && (
+              <div style={{ fontSize: 12, color: "#dc2626", marginTop: 6 }}>{apiKeyBannerError}</div>
+            )}
+          </div>
+        )}
 
         {/* Shallow thinker */}
         <Field label="Shallow thinker">
