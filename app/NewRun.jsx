@@ -146,13 +146,15 @@ function NewRunPage({ onRunLaunched }) {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     setApiKeyStatus(null);
     setApiKeyInput("");
     setApiKeyBannerError(null);
-    fetch(`/api/env/api-key/${form.llm_provider}`)
+    fetch(`/api/env/api-key/${form.llm_provider}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setApiKeyStatus(data); })
-      .catch(() => {});
+      .catch(e => { if (e.name !== "AbortError") {} });
+    return () => controller.abort();
   }, [form.llm_provider]);
 
   function set(key, value) {
@@ -340,6 +342,7 @@ function NewRunPage({ onRunLaunched }) {
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="password"
+                aria-label="API key"
                 value={apiKeyInput}
                 onChange={e => { setApiKeyInput(e.target.value); setApiKeyBannerError(null); }}
                 placeholder="Paste API key…"
