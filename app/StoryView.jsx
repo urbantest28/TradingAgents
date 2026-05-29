@@ -4,8 +4,6 @@
 //   * search within the report
 //   * floating "Ask the report" assistant (claude-powered)
 
-const COMPANY_BY_TICKER = Object.fromEntries(REPORT_MANIFEST.map((m) => [m.ticker, m.company]));
-
 function StoryView({ folder, report, onBack, allRuns = [] }) {
   const tweaks = React.useContext(window.TweaksContext);
   const verdict = normalizeVerdict(report.decision.Rating, report.trader.__final);
@@ -14,7 +12,7 @@ function StoryView({ folder, report, onBack, allRuns = [] }) {
   const stop = num(report.trader["Stop Loss"]);
   const target = num(report.decision["Price Target"]);
   const ticker = folder.split("_")[0];
-  const company = COMPANY_BY_TICKER[ticker] || "";
+  const company = allRuns[0]?.company || report.meta?.company || "";
   const horizon = report.decision["Time Horizon"] || "";
   const dateStr = folder.replace(/^[A-Z]+_(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/, "$1-$2-$3 · $4:$5");
 

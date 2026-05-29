@@ -38,8 +38,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount app/ directory for JSX/CSS static assets
-app.mount("/static", StaticFiles(directory=str(ROOT / "app")), name="static")
+# Serve app/ JSX/CSS assets with no-cache so browser always gets latest after edits
+_APP_DIR = ROOT / "app"
+
+@app.get("/static/{filename:path}")
+async def serve_app_static(filename: str):
+    path = _APP_DIR / filename
+    if not path.exists():
+        raise HTTPException(status_code=404)
+    return FileResponse(str(path), headers={"Cache-Control": "no-store"})
 
 # ---------------------------------------------------------------------------
 # In-memory run store  { run_id -> RunState }
