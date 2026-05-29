@@ -153,3 +153,55 @@ def test_get_api_key_unknown_provider(tmp_path, monkeypatch):
     data = r.json()
     assert data["env_var"] is None
     assert data["present"] is True
+
+
+def test_post_api_key_saves_to_env(tmp_path, monkeypatch):
+    """POST /api/env/api-key writes key to .env file and sets os.environ."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.post("/api/env/api-key", json={"provider": "openai", "key": "sk-openai-test"})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["ok"] is True
+    assert data["env_var"] == "OPENAI_API_KEY"
+    # Key exported into the live process env
+    import os
+    assert os.environ.get("OPENAI_API_KEY") == "sk-openai-test"
+    # .env file created and contains the key
+    env_file = tmp_path / ".env"
+    assert env_file.exists()
+    content = env_file.read_text(encoding="utf-8")
+    assert "OPENAI_API_KEY" in content
+    assert "sk-openai-test" in content
+
+
+def test_post_api_key_rejects_empty_key(tmp_path, monkeypatch):
+    """POST /api/env/api-key with an empty key string returns 400."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.post("/api/env/api-key", json={"provider": "openai", "key": ""})
+    assert r.status_code == 400
+
+
+def test_post_api_key_rejects_no_key_provider(tmp_path, monkeypatch):
+    """POST /api/env/api-key for a no-key provider (ollama) returns 400."""
+    (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    import sys
+    sys.modules.pop("webapp", None)
+    import webapp
+    from fastapi.testclient import TestClient
+    client = TestClient(webapp.app)
+    r = client.post("/api/env/api-key", json={"provider": "ollama", "key": "sk-whatever"})
+    assert r.status_code == 400
