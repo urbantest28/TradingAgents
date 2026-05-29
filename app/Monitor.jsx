@@ -137,6 +137,7 @@ function MonitorPage({ runId, onComplete }) {
           setRunStatus("complete");
           setReportFolder(s.report_folder);
           onComplete?.();
+          window.location.hash = `/reports/${encodeURIComponent(s.report_folder)}`;
           return;
         }
         if (s.status === "error") {
