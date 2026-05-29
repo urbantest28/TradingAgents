@@ -159,7 +159,10 @@ def test_post_api_key_saves_to_env(tmp_path, monkeypatch):
     """POST /api/env/api-key writes key to .env file and sets os.environ."""
     (tmp_path / "index.html").write_text("<html/>", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    # Use setenv first so monkeypatch tracks the slot; then delenv makes it absent.
+    # This ensures teardown removes the key even if the endpoint sets os.environ directly.
+    monkeypatch.setenv("OPENAI_API_KEY", "")
+    monkeypatch.delenv("OPENAI_API_KEY")
     import sys
     sys.modules.pop("webapp", None)
     import webapp
