@@ -20,6 +20,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sse_starlette.sse import EventSourceResponse
+from dotenv import find_dotenv, set_key
+from tradingagents.llm_clients.api_key_env import get_api_key_env
 
 # ---------------------------------------------------------------------------
 # App & config
@@ -162,6 +164,20 @@ async def delete_preset(preset_id: str):
         raise HTTPException(status_code=404, detail="Preset not found")
     _save_presets(new_presets)
     return JSONResponse({"ok": True})
+
+
+# ---------------------------------------------------------------------------
+# Routes: /api/env
+# ---------------------------------------------------------------------------
+@app.get("/api/env/api-key/{provider}")
+async def check_api_key(provider: str):
+    """Return whether an API key env var is present for the given provider."""
+    env_var = get_api_key_env(provider)
+    if env_var is None:
+        # Ollama and unknown providers need no key — treat as present.
+        return JSONResponse({"env_var": None, "present": True})
+    present = bool(os.environ.get(env_var))
+    return JSONResponse({"env_var": env_var, "present": present})
 
 
 # ---------------------------------------------------------------------------
